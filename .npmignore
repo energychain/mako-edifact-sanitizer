@@ -1,0 +1,10 @@
+node_modules/
+npm-debug.log*
+coverage/
+.nyc_output/
+sanitized.edi
+report.json
+*.tgz
+.git/
+.github/
+docs/source-trace.md
