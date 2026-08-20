@@ -24,5 +24,13 @@
     "smoke": "node bin/mako-edifact-sanitizer.js fixtures/mscons.synthetic.edi --out /tmp/mako-edifact-sanitized.edi --report /tmp/mako-edifact-report.json && node -e \"const fs=require('fs'); const r=JSON.parse(fs.readFileSync('/tmp/mako-edifact-report.json','utf8')); if(!r.summary || !r.replacementsByClass) process.exit(1); console.log('smoke ok')\""
   },
   "keywords": ["edifact", "mako", "sanitizer", "pseudonymization"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/energychain/mako-edifact-sanitizer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/energychain/mako-edifact-sanitizer/issues"
+  },
+  "homepage": "https://github.com/energychain/mako-edifact-sanitizer#readme",
   "license": "MIT"
 }
