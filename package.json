@@ -4,6 +4,18 @@
   "description": "Offline-first EDIFACT pseudonymization aid for synthetic MaKo case sharing.",
   "type": "commonjs",
   "main": "src/index.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "src/",
+    "bin/",
+    "fixtures/",
+    "docs/design-note.md",
+    "docs/publication-checklist.md",
+    "README.md",
+    "LICENSE"
+  ],
   "bin": {
     "mako-edifact-sanitizer": "bin/mako-edifact-sanitizer.js"
   },
