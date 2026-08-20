@@ -15,6 +15,7 @@ test('sanitize preserves EDIFACT envelopes and segment order for MSCONS while ps
   assert.match(result.sanitizedEdifact, /UNH\+1\+MSCONS/);
   assert.match(result.sanitizedEdifact, /UNT\+10\+1'UNZ\+1\+MSCONS1'/);
   assert.doesNotMatch(result.sanitizedEdifact, /9900000000001|9900000000002|DE0012345678901234567890123456789|Max Mustermann|max\.mustermann@example\.test|\+491711234567/);
+  assert.doesNotMatch(JSON.stringify(result.report), /9900000000001|9900000000002|DE0012345678901234567890123456789|Max Mustermann|max\.mustermann@example\.test|\+491711234567/);
   assert.match(result.sanitizedEdifact, /MP_A|MP_B|LOC_[A-Z0-9_]+|PERSON_1|EMAIL_1|PHONE_1/);
   assert.match(result.sanitizedEdifact, /COM\+EMAIL_1:EM'COM\+PHONE_1:TE'/);
   assert.equal(result.report.includeRawValues, false);

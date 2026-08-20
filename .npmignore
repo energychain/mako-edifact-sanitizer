@@ -8,3 +8,4 @@ report.json
 .git/
 .github/
 docs/source-trace.md
+docs/edifact-sanitizer-receipt-cta-draft.md
