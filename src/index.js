@@ -112,7 +112,7 @@ function sanitizeMarketPartners(text, state, report, separators) {
 }
 
 function sanitizeLocations(text, state, report) {
-  return text.replace(/\bDE\d{31,33}\b/g, (raw) =>
+  return text.replace(/\bDE[0-9A-Z]{20,40}\b/g, (raw) =>
     aliasFor(state, report, 'location', raw, () => `LOC_${shortHash(raw)}`, 'high')
   );
 }
@@ -142,8 +142,88 @@ function sanitizeQualifiedReferences(text, state, report) {
 }
 
 function sanitizeBgmReferences(text, state, report) {
-  return text.replace(/(BGM\+[^+']+\+)([^+']+)(\+)/g, (m, prefix, raw, suffix) => {
+  return text.replace(/(BGM\+[^+']+\+)([^+']+)(\+|')/g, (m, prefix, raw, suffix) => {
     return prefix + aliasFor(state, report, 'caseReference', raw, () => `CASE_${shortHash(raw)}`, 'medium') + suffix;
+  });
+}
+
+function aliasComponentField(state, report, cls, field, prefix, confidence = 'medium') {
+  if (!field) return field;
+  const parts = field.split(':');
+  if (!parts[0]) return field;
+  parts[0] = aliasFor(state, report, cls, parts[0], () => `${prefix}_${shortHash(parts[0])}`, confidence);
+  return parts.join(':');
+}
+
+function aliasQualifiedValue(state, report, cls, field, prefix, confidence = 'medium') {
+  if (!field) return field;
+  const parts = field.split(':');
+  if (parts.length < 2 || !parts[1]) return aliasComponentField(state, report, cls, field, prefix, confidence);
+  parts[1] = aliasFor(state, report, cls, parts[1], () => `${prefix}_${shortHash(parts[1])}`, confidence);
+  return parts.join(':');
+}
+
+function aliasContactField(state, report, field) {
+  if (!field) return field;
+  return field
+    .split(':')
+    .map((part) => {
+      if (!part || part === '?' || /^[A-Z]{2,3}$/.test(part)) return part;
+      if (/@/.test(part)) return aliasFor(state, report, 'email', part, () => nextAlias(state, 'emailAlias', 'EMAIL'), 'high');
+      if (/^(?:\+49|0049|0)?[0-9][0-9\s/().-]{6,}[0-9]$/.test(part)) {
+        return aliasFor(state, report, 'phone', part, () => nextAlias(state, 'phoneAlias', 'PHONE'), 'medium');
+      }
+      return part;
+    })
+    .join(':');
+}
+
+function sanitizeSegmentReferences(text, state, report) {
+  return text.replace(/([A-Z]{3}\+[^']*')/g, (segment) => {
+    const body = segment.slice(0, -1);
+    const parts = body.split('+');
+    const tag = parts[0];
+    switch (tag) {
+      case 'UNB':
+        if (parts[5]) parts[5] = aliasFor(state, report, 'dataExchangeReference', parts[5], () => `DAREF_${shortHash(parts[5])}`, 'medium');
+        break;
+      case 'UNZ':
+        if (parts[2]) parts[2] = aliasFor(state, report, 'dataExchangeReference', parts[2], () => `DAREF_${shortHash(parts[2])}`, 'medium');
+        break;
+      case 'RFF': {
+        if (parts[1]) parts[1] = aliasQualifiedValue(state, report, 'reference', parts[1], 'REF', 'medium');
+        break;
+      }
+      case 'LOC':
+        if (parts[2]) parts[2] = aliasComponentField(state, report, 'location', parts[2], 'LOC', 'high');
+        break;
+      case 'FII':
+        for (let i = 2; i < parts.length; i++) {
+          if (parts[i]) parts[i] = aliasComponentField(state, report, 'bankAccount', parts[i], 'BANK', 'high');
+        }
+        break;
+      case 'DOC':
+        if (parts[2]) parts[2] = aliasComponentField(state, report, 'documentReference', parts[2], 'DOC', 'medium');
+        break;
+      case 'IDE':
+        if (parts[2]) parts[2] = aliasComponentField(state, report, 'identifier', parts[2], 'ID', 'medium');
+        break;
+      case 'NAD':
+        if (parts[2]) parts[2] = aliasComponentField(state, report, 'partyIdentifier', parts[2], 'PARTY', 'high');
+        if (parts[3]) parts[3] = aliasComponentField(state, report, 'partyIdentifier', parts[3], 'PARTY', 'high');
+        for (const idx of [4, 5, 6, 8]) {
+          if (parts[idx]) parts[idx] = aliasFor(state, report, 'address', parts[idx], () => `ADDR_${shortHash(parts[idx])}`, 'medium');
+        }
+        break;
+      case 'COM':
+        for (let i = 1; i < parts.length; i++) {
+          parts[i] = aliasContactField(state, report, parts[i]);
+        }
+        break;
+      default:
+        break;
+    }
+    return parts.join('+') + "'";
   });
 }
 
@@ -213,6 +293,7 @@ function sanitize(edifactText, options = {}) {
   out = sanitizePhones(out, state, report);
   out = sanitizeQualifiedReferences(out, state, report);
   out = sanitizeBgmReferences(out, state, report);
+  out = sanitizeSegmentReferences(out, state, report);
   out = sanitizeContacts(out, state, report);
   out = sanitizeNadFreeText(out, state, report);
   detectWarnings(out, warnings);
