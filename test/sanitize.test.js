@@ -49,6 +49,30 @@ test('debugIncludeRawValues is explicit opt-in', () => {
   assert.ok(result.report.debugRawValues.marketPartner.length >= 2);
 });
 
+test('sanitize masks INVOIC NAD organization and address free text while preserving dates', () => {
+  const input = fixture('invoic.nad-address-regression.synthetic.edi');
+  const result = sanitize(input);
+  const reportJson = JSON.stringify(result.report);
+  const forbidden = [
+    'Regionalwerke Beispiel GmbH',
+    'Lieferant Beispiel GmbH & Co. KG',
+    'Hauptstr.',
+    'Parsevalstr.',
+    'Wiesenstr.',
+    'Musterstadt',
+    'Beispielstadt',
+    '37170',
+    '40468',
+  ];
+  for (const raw of forbidden) {
+    assert.equal(result.sanitizedEdifact.includes(raw), false, `sanitized output leaked ${raw}`);
+    assert.equal(reportJson.includes(raw), false, `report leaked ${raw}`);
+  }
+  assert.match(result.sanitizedEdifact, /NAD\+MS\+PARTY_[A-F0-9]{8}::293\+\+ADDR_[A-F0-9]{8}\+ADDR_[A-F0-9]{8}\+ADDR_[A-F0-9]{8}\+\+ADDR_[A-F0-9]{8}\+DE'/);
+  assert.match(result.sanitizedEdifact, /DTM\+137:202607151442\?\+00:303'/);
+  assert.doesNotMatch(result.sanitizedEdifact, /DTM\+137:[^']*PHONE_/);
+});
+
 test('sanitize removes real-world identifier references without masking quantities or amounts', () => {
   const input = [
     "UNB+UNOC:3+9900000000123:500+9900000000456:500+260824:1200+DAREF-REAL-123456'",
