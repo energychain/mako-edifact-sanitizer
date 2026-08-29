@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 const fs = require('node:fs');
+const pkg = require('../package.json');
 const { sanitize } = require('../src');
 
 function usage(exitCode = 0) {
   const stream = exitCode ? process.stderr : process.stdout;
-  stream.write(`Usage: mako-edifact-sanitizer [input.edi] [--out sanitized.edi] [--report report.json] [--api-key KEY] [--debug-include-raw-values]\n\nIf input is omitted or '-', EDIFACT is read from stdin and sanitized EDIFACT is written to stdout.\nCERNION_API_KEY is accepted for later lookup integration; the MVP works offline and never prints token values.\n`);
+  stream.write(`Usage: mako-sanitizer [input.edi] [--out sanitized.edi] [--report report.json] [--api-key KEY] [--debug-include-raw-values] [--version]\n\nAliases: mako-sanitizer, mako-edifact-sanitizer\n\nIf input is omitted or '-', EDIFACT is read from stdin and sanitized EDIFACT is written to stdout.\nCERNION_API_KEY is accepted for later lookup integration; the MVP works offline and never prints token values.\n`);
   process.exit(exitCode);
 }
 
@@ -17,6 +18,10 @@ let debugIncludeRawValues = false;
 for (let i = 0; i < args.length; i++) {
   const arg = args[i];
   if (arg === '--help' || arg === '-h') usage(0);
+  if (arg === '--version' || arg === '-v') {
+    process.stdout.write(`${pkg.version}\n`);
+    process.exit(0);
+  }
   if (arg === '--out') { outPath = args[++i]; continue; }
   if (arg === '--report') { reportPath = args[++i]; continue; }
   if (arg === '--api-key') { apiKey = args[++i] || ''; continue; }

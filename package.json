@@ -1,6 +1,6 @@
 {
   "name": "mako-edifact-sanitizer",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Offline-first EDIFACT pseudonymization aid for synthetic MaKo case sharing.",
   "type": "commonjs",
   "main": "src/index.js",
@@ -10,6 +10,8 @@
   "files": [
     "src/",
     "bin/",
+    "scripts/",
+    "web/",
     "fixtures/",
     "docs/design-note.md",
     "docs/publication-checklist.md",
@@ -17,11 +19,15 @@
     "LICENSE"
   ],
   "bin": {
-    "mako-edifact-sanitizer": "bin/mako-edifact-sanitizer.js"
+    "mako-edifact-sanitizer": "bin/mako-edifact-sanitizer.js",
+    "mako-sanitizer": "bin/mako-edifact-sanitizer.js"
   },
   "scripts": {
+    "build:web": "node scripts/build-web-bundle.js",
     "test": "node --test",
-    "smoke": "node bin/mako-edifact-sanitizer.js fixtures/mscons.synthetic.edi --out /tmp/mako-edifact-sanitized.edi --report /tmp/mako-edifact-report.json && node -e \"const fs=require('fs'); const r=JSON.parse(fs.readFileSync('/tmp/mako-edifact-report.json','utf8')); if(!r.summary || !r.replacementsByClass) process.exit(1); console.log('smoke ok')\""
+    "smoke": "npm run build:web && node bin/mako-edifact-sanitizer.js fixtures/mscons.synthetic.edi --out /tmp/mako-edifact-sanitized.edi --report /tmp/mako-edifact-report.json && node -e \"const fs=require('fs'); const r=JSON.parse(fs.readFileSync('/tmp/mako-edifact-report.json','utf8')); if(!r.summary || !r.replacementsByClass) process.exit(1); console.log('cli smoke ok')\" && node scripts/smoke-global-install.js && node scripts/verify-static-web-ui.js",
+    "smoke:global-install": "node scripts/smoke-global-install.js",
+    "smoke:web": "npm run build:web && node scripts/verify-static-web-ui.js"
   },
   "keywords": [
     "edifact",
