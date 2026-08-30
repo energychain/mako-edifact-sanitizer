@@ -2,7 +2,6 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const vm = require('node:vm');
 const { spawnSync } = require('node:child_process');
 const { sanitize } = require('../src');
 
@@ -27,13 +26,12 @@ function loadBrowserBundle() {
     encoding: 'utf8',
   });
   assert.equal(build.status, 0, build.stderr || build.stdout);
-  const context = vm.createContext({});
-  vm.runInContext(
-    fs.readFileSync(path.join(root, 'web', 'mako-edifact-sanitizer.browser.js'), 'utf8'),
-    context
-  );
-  assert.equal(typeof context.MakoEdifactSanitizer.sanitize, 'function');
-  return context.MakoEdifactSanitizer;
+  const bundlePath = path.join(root, 'web', 'mako-edifact-sanitizer.browser.js');
+  delete globalThis.MakoEdifactSanitizer;
+  delete require.cache[require.resolve(bundlePath)];
+  require(bundlePath);
+  assert.equal(typeof globalThis.MakoEdifactSanitizer.sanitize, 'function');
+  return globalThis.MakoEdifactSanitizer;
 }
 
 test('package exposes long and short npm bin names', () => {
