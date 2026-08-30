@@ -4,6 +4,54 @@ Open-source-ready MVP for transforming synthetic or approved MaKo EDIFACT messag
 
 Safety boundary: this is an anonymization/pseudonymization aid, not a guaranteed full DSGVO anonymization mechanism and not legal advice. Review results before sharing externally. Do not use real customer or mixed-sensitive EDIFACT data without separate approval and a suitable processing/legal setup.
 
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/energychain/mako-edifact-sanitizer)
+
+## Quick Start
+
+Install globally from npm:
+
+```bash
+npm install -g mako-edifact-sanitizer
+mako-sanitizer input.edi --out sanitized.edi --report report.json
+```
+
+The long binary stays available for compatibility:
+
+```bash
+mako-edifact-sanitizer input.edi --out sanitized.edi --report report.json
+```
+
+For a clean checkout or cloud workspace:
+
+```bash
+git clone https://github.com/energychain/mako-edifact-sanitizer.git
+cd mako-edifact-sanitizer
+npm test
+npm run smoke
+node bin/mako-edifact-sanitizer.js fixtures/mscons.synthetic.edi --out sanitized.edi --report report.json
+```
+
+```bash
+npx github:energychain/mako-edifact-sanitizer fixtures/mscons.synthetic.edi --out sanitized.edi --report report.json
+```
+
+Browser/cloud workspaces:
+
+- Gitpod: https://gitpod.io/#https://github.com/energychain/mako-edifact-sanitizer
+- StackBlitz: https://stackblitz.com/fork/github/energychain/mako-edifact-sanitizer?title=MaKo%20EDIFACT%20Sanitizer
+- GitHub Codespaces also works from the repository page.
+
+## Static Web UI
+
+Open `web/index.html` from a checkout or from a static file host for an offline-first browser UI:
+
+1. Paste EDIFACT into the input field.
+2. Confirm that the page is only a local example and not legal anonymization advice.
+3. Click **Im Browser pseudonymisieren**.
+4. Copy or download `sanitized.edi` and `report.json`.
+
+The page loads `web/mako-edifact-sanitizer.browser.js`, a generated bundle built from the library implementation in `src/index.js`. It does not maintain a separate inline sanitizer fork. The page has no telemetry, no external APIs, and no EDIFACT upload path; it ships only with synthetic sample data and repeats the same limitation as the CLI/library: this is a pseudonymization aid, not guaranteed DSGVO anonymization or legal advice.
+
 ## Library API
 
 ```js
@@ -29,10 +77,12 @@ node bin/mako-edifact-sanitizer.js fixtures/mscons.synthetic.edi --out sanitized
 cat fixtures/mscons.synthetic.edi | node bin/mako-edifact-sanitizer.js - > sanitized.edi
 ```
 
-Later NPM bin name:
+NPM bin names:
 
 ```bash
+mako-sanitizer input.edi --out sanitized.edi --report report.json
 mako-edifact-sanitizer input.edi --out sanitized.edi --report report.json
+mako-sanitizer --version
 ```
 
 ## API key path
@@ -54,7 +104,12 @@ Detected/pseudonymized classes include:
 
 ```bash
 npm test
+npm run build:web
 npm run smoke
+npm pack --json
+npm run smoke:global-install
 ```
+
+`npm run build:web` regenerates the browser bundle from `src/index.js`. `npm run smoke` performs the CLI smoke, real packed-tarball global-install smoke for both npm bin names, and a static Web UI smoke that verifies WebUI output matches the library output for synthetic fixtures and the INVOIC NAD-address regression fixture.
 
 The default report stores categories and counts only. Raw originals are only included with `--debug-include-raw-values` / `debugIncludeRawValues: true` for local debugging and must not be used in shareable reports.
